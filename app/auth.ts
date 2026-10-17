@@ -17,12 +17,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
 
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (
+          typeof credentials?.email !== "string" ||
+          typeof credentials.password !== "string"
+        ) {
           return null;
         }
 
-        const email = credentials.email as string;
-        const password = credentials.password as string;
+        const email = credentials.email.trim().toLowerCase();
+        const password = credentials.password;
+
+        if (!email || !password) {
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: {
@@ -64,17 +71,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // ==========================================
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-
-        // Credentials มี role
-        if (user.role) {
-          token.role = user.role;
+        if (typeof user.id === "string") {
+          token.id = user.id;
         }
 
-        // GitHub user ไม่มี role จาก Credentials
-        // ให้ USER เป็นค่าเริ่มต้น
-        if (!token.role) {
-          token.role = "USER";
+        switch (user.role) {
+          case "ADMIN":
+            token.role = "ADMIN";
+            break;
+          case "STAFF":
+            token.role = "STAFF";
+            break;
+          default:
+            token.role = "USER";
         }
       }
 
@@ -88,7 +97,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
 
-        session.user.role = (token.role as string) || "USER";
+        session.user.role =
+          token.role === "ADMIN" ||
+          token.role === "STAFF" ||
+          token.role === "USER"
+            ? token.role
+            : "USER";
       }
 
       return session;

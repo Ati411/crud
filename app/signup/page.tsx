@@ -1,148 +1,138 @@
 "use client";
 
+import { useActionState } from "react";
+import { signupAction, SignupFormState } from "./actions";
 import Link from "next/link";
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 
-import { signUp, type SignUpState } from "@/app/signup/actions";
+const initialState: SignupFormState = {
+  success: false,
+};
 
-const initialState: SignUpState = {};
-
-export default function SignUpPage() {
-  const router = useRouter();
-
-  const [state, formAction, pending] = useActionState(signUp, initialState);
-
-  useEffect(() => {
-    if (state.success) {
-      router.push("/login?registered=1");
-    }
-  }, [state.success, router]);
+export default function SignupPage() {
+  const [state, formAction, isPending] = useActionState(
+    signupAction,
+    initialState,
+  );
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-center text-3xl font-bold text-gray-800">
-          Sign Up
-        </h1>
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-900">สมัครสมาชิก</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            สร้างบัญชีใหม่เพื่อเข้าใช้งานระบบลงทะเบียนและจัดการข้อมูลนักศึกษา
+          </p>
+        </div>
 
-        <p className="mb-6 text-center text-gray-500">สร้างบัญชีผู้ใช้งาน</p>
+        {/* แสดงข้อความ Error ภาพรวม (เช่น Database ล่ม) */}
+        {state.message && (
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+            {state.message}
+          </div>
+        )}
 
         <form action={formAction} className="space-y-4">
-          {/* Name */}
+          {/* ชื่อ-นามสกุล */}
           <div>
-            <label
-              htmlFor="name"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              ชื่อ
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              ชื่อ-นามสกุล (Name)
             </label>
-
             <input
-              id="name"
-              name="name"
               type="text"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2
-                         focus:border-blue-500 focus:outline-none"
-              placeholder="ชื่อของคุณ"
+              name="name"
+              placeholder="สมชาย ใจดี"
+              disabled={isPending}
               required
+              className="w-full rounded-md border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
             />
+            {state.errors?.name && (
+              <p className="mt-1 text-xs text-red-500">
+                {state.errors.name[0]}
+              </p>
+            )}
           </div>
 
-          {/* Email */}
+          {/* อีเมล */}
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Email
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              อีเมล (Email)
             </label>
-
             <input
-              id="email"
-              name="email"
               type="email"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2
-                         focus:border-blue-500 focus:outline-none"
+              name="email"
               placeholder="you@example.com"
+              disabled={isPending}
               required
+              className="w-full rounded-md border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
             />
+            {state.errors?.email && (
+              <p className="mt-1 text-xs text-red-500">
+                {state.errors.email[0]}
+              </p>
+            )}
           </div>
 
-          {/* Password */}
+          {/* รหัสผ่าน */}
           <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Password
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              รหัสผ่าน (Password)
             </label>
-
             <input
-              id="password"
+              type="password"
               name="password"
-              type="password"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2
-                         focus:border-blue-500 focus:outline-none"
-              placeholder="อย่างน้อย 6 ตัวอักษร"
-              minLength={6}
+              placeholder="อย่างน้อย 8 ตัวอักษร (ตัวอักษร + ตัวเลข)"
+              disabled={isPending}
               required
+              className="w-full rounded-md border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
             />
+            {state.errors?.password && (
+              <p className="mt-1 text-xs text-red-500">
+                {state.errors.password[0]}
+              </p>
+            )}
           </div>
 
-          {/* Confirm Password */}
+          {/* ยืนยันรหัสผ่าน */}
           <div>
-            <label
-              htmlFor="confirmPassword"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Confirm Password
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              ยืนยันรหัสผ่าน (Confirm Password)
             </label>
-
             <input
-              id="confirmPassword"
-              name="confirmPassword"
               type="password"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2
-                         focus:border-blue-500 focus:outline-none"
+              name="confirmPassword"
               placeholder="กรอกรหัสผ่านอีกครั้ง"
-              minLength={6}
+              disabled={isPending}
               required
+              className="w-full rounded-md border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
             />
+            {state.errors?.confirmPassword && (
+              <p className="mt-1 text-xs text-red-500">
+                {state.errors.confirmPassword[0]}
+              </p>
+            )}
           </div>
 
-          {/* Error */}
-          {state.error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {state.error}
-            </div>
-          )}
-
-          {/* Submit */}
           <button
             type="submit"
-            disabled={pending}
-            className="w-full rounded-lg bg-blue-600 px-4 py-2.5
-                       font-medium text-white
-                       hover:bg-blue-700
-                       disabled:cursor-not-allowed
-                       disabled:opacity-50"
+            disabled={isPending}
+            className="w-full rounded-md bg-emerald-600 p-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
           >
-            {pending ? "กำลังสร้างบัญชี..." : "สร้างบัญชี"}
+            {isPending ? "กำลังสร้างบัญชี..." : "สมัครสมาชิก (Sign Up)"}
           </button>
         </form>
 
-        {/* Login */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          มีบัญชีอยู่แล้ว?
-          <Link
-            href="/login"
-            className="ml-1 font-medium text-blue-600 hover:underline"
-          >
-            Login
-          </Link>
+        <div className="mt-6 border-t border-gray-200 pt-6 text-center">
+          <p className="text-sm text-gray-600">
+            มีบัญชีผู้ใช้งานอยู่แล้ว?{" "}
+            <Link
+              href="/login"
+              className="font-semibold text-blue-600 hover:text-blue-500 hover:underline"
+            >
+              เข้าสู่ระบบที่นี่ (Login)
+            </Link>
+          </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -5,19 +5,19 @@ export const studentSchema = z.object({
     .string()
     .min(1, "กรุณากรอกรหัสนักศึกษา")
     .max(20, "รหัสนักศึกษาต้องไม่เกิน 20 ตัวอักษร"),
-
   name: z
     .string()
     .min(1, "กรุณากรอกชื่อ-นามสกุล")
     .max(100, "ชื่อ-นามสกุลต้องไม่เกิน 100 ตัวอักษร"),
-
-  email: z.string().email("รูปแบบ Email ไม่ถูกต้อง").or(z.literal("")),
-
+  email: z
+    .string()
+    .email("รูปแบบ Email ไม่ถูกต้อง")
+    .optional() // รองรับค่าที่ไม่มี (undefined)
+    .or(z.literal("")),
   major: z
     .string()
     .min(1, "กรุณากรอกสาขา")
     .max(100, "ชื่อสาขาต้องไม่เกิน 100 ตัวอักษร"),
-
   year: z
     .number()
     .int("ชั้นปีต้องเป็นจำนวนเต็ม")
