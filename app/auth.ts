@@ -2,11 +2,23 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
-
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/app/lib/prisma";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  session: {
+    strategy: "jwt",
+  },
   providers: [
+    // ==========================================
+    // Login ด้วย GitHub
+    // ==========================================
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
+    }),
+
     // ==========================================
     // Login ด้วย Email / Password
     // ==========================================
@@ -37,7 +49,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
 
-        if (!user) {
+        // ดักกรณีไม่พบ User หรือ User นี้สมัครผ่าน GitHub (จึงไม่มีรหัสผ่านในระบบ)
+        if (!user || !user.passwordHash) {
           return null;
         }
 
@@ -55,14 +68,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-
-    // ==========================================
-    // Login ด้วย GitHub
-    // ==========================================
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
-    }),
   ],
 
   callbacks: {
@@ -75,7 +80,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.id = user.id;
         }
 
-        switch (user.role) {
+        // เซฟตี้ดักไว้เผื่อกรณีล็อกอิน GitHub ครั้งแรกแล้ว Prisma ยังไม่ทันรีเทิร์น Role กลับมา
+        const userRole = (user as any).role || "USER";
+
+        switch (userRole) {
           case "ADMIN":
             token.role = "ADMIN";
             break;
@@ -111,9 +119,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   pages: {
     signIn: "/login",
-  },
-
-  session: {
-    strategy: "jwt",
   },
 });
