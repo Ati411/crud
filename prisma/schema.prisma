@@ -1,17 +1,38 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
+// ไฟล์ prisma/schema.prisma
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../app/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql" // เปลี่ยนเป็น postgresql เท่านั้น
+  url      = env("DATABASE_URL")
 }
 
+// -------------------------------------------------------------
+// USER & AUTHENTICATION
+// -------------------------------------------------------------
+model User {
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  studentProfile Student?
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  USER
+}
+
+// -------------------------------------------------------------
+// BUSINESS LOGIC: STUDENT, COURSE, ENROLLMENT
+// -------------------------------------------------------------
 model Student {
   id          Int      @id @default(autoincrement())
   studentCode String   @unique
@@ -22,20 +43,43 @@ model Student {
   status      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // เชื่อมกับบัญชีผู้ใช้ (1 User = 1 Student)
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  enrollments Enrollment[]
 }
 
-model User {
-  id           String   @id @default(cuid())
-  name         String?
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Course {
+  id          String   @id @default(uuid())
+  courseCode  String   @unique // เช่น "CS101"
+  title       String
+  credits     Int
+  capacity    Int      // โควต้าที่นั่ง
+  isActive    Boolean  @default(true)
+
+  enrollments Enrollment[]
 }
 
-enum Role {
-  ADMIN
-  STAFF
-  USER
+model Enrollment {
+  id         String           @id @default(uuid())
+  studentId  Int
+  courseId   String
+  status     EnrollmentStatus @default(ENROLLED)
+  enrolledAt DateTime         @default(now())
+
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course     Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // ป้องกันการลงวิชาเดิมซ้ำ
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ENROLLED
+  DROPPED
 }
