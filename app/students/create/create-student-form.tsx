@@ -1,160 +1,93 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
+// สังเกตที่ Import: ตัด /app ออก เพื่ออ้างอิงจาก Root แทน
+import Button from "@/app/components/ui/Button";
+import Input from "@/app/components/ui/Input";
+import { FormState } from "../actions";
 
-type FormState = {
-  success: boolean;
-  errors?: {
-    studentCode?: string[];
-    name?: string[];
-    email?: string[];
-    major?: string[];
-    year?: string[];
-  };
-};
+const initialState: FormState = { success: false };
 
-type CreateStudentFormProps = {
-  action: (state: FormState, formData: FormData) => Promise<FormState>;
-};
-
-export default function CreateStudentForm({ action }: CreateStudentFormProps) {
-  const [state, formAction, pending] = useActionState(action, {
-    success: false,
-  });
+export default function CreateStudentForm({
+  action,
+  cancelUrl = "/students",
+}: {
+  action: any;
+  cancelUrl?: string;
+}) {
+  const [state, formAction, isPending] = useActionState(action, initialState);
 
   return (
-    <form
-      action={formAction}
-      className="space-y-5 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-    >
-      {/* รหัสนักศึกษา */}
-      <div>
-        <label
-          htmlFor="studentCode"
-          className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          รหัสนักศึกษา
-        </label>
+    <form action={formAction} className="space-y-6">
+      {state.message && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
+          {state.message}
+        </div>
+      )}
 
-        <input
-          id="studentCode"
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <Input
+          label="รหัสนักศึกษา"
           name="studentCode"
-          type="text"
-          className="w-full rounded-md border border-gray-300 px-3 py-2"
-          disabled={pending}
+          placeholder="เช่น 673450000-0"
+          error={state.errors?.studentCode?.[0]}
+          disabled={isPending}
+          required
         />
-
-        {state.errors?.studentCode && (
-          <p className="mt-1 text-sm text-red-600">
-            {state.errors.studentCode[0]}
-          </p>
-        )}
-      </div>
-
-      {/* ชื่อ */}
-      <div>
-        <label
-          htmlFor="name"
-          className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          ชื่อ-นามสกุล
-        </label>
-
-        <input
-          id="name"
+        <Input
+          label="ชื่อ-นามสกุล"
           name="name"
-          type="text"
-          className="w-full rounded-md border border-gray-300 px-3 py-2"
-          disabled={pending}
+          placeholder="สมชาย เรียนดี"
+          error={state.errors?.name?.[0]}
+          disabled={isPending}
+          required
         />
-
-        {state.errors?.name && (
-          <p className="mt-1 text-sm text-red-600">{state.errors.name[0]}</p>
-        )}
       </div>
 
-      {/* Email */}
-      <div>
-        <label
-          htmlFor="email"
-          className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          Email
-        </label>
+      <Input
+        label="Email (อีเมล)"
+        name="email"
+        type="email"
+        placeholder="student@example.com"
+        error={state.errors?.email?.[0]}
+        disabled={isPending}
+      />
 
-        <input
-          id="email"
-          name="email"
-          className="w-full rounded-md border border-gray-300 px-3 py-2"
-          disabled={pending}
-        />
-
-        {state.errors?.email && (
-          <p className="mt-1 text-sm text-red-600">{state.errors.email[0]}</p>
-        )}
-      </div>
-
-      {/* สาขา */}
-      <div>
-        <label
-          htmlFor="major"
-          className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          สาขา
-        </label>
-
-        <input
-          id="major"
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <Input
+          label="สาขาวิชา"
           name="major"
-          type="text"
-          className="w-full rounded-md border border-gray-300 px-3 py-2"
-          disabled={pending}
+          placeholder="เช่น Computer Science"
+          error={state.errors?.major?.[0]}
+          disabled={isPending}
+          required
         />
-
-        {state.errors?.major && (
-          <p className="mt-1 text-sm text-red-600">{state.errors.major[0]}</p>
-        )}
-      </div>
-
-      {/* ชั้นปี */}
-      <div>
-        <label
-          htmlFor="year"
-          className="mb-2 block text-sm font-medium text-gray-700"
-        >
-          ชั้นปี
-        </label>
-
-        <input
-          id="year"
+        <Input
+          label="ชั้นปี"
           name="year"
           type="number"
-          min="1"
-          max="8"
-          className="w-full rounded-md border border-gray-300 px-3 py-2"
-          disabled={pending}
+          min={1}
+          max={8}
+          placeholder="1-8"
+          error={state.errors?.year?.[0]}
+          disabled={isPending}
+          required
         />
-
-        {state.errors?.year && (
-          <p className="mt-1 text-sm text-red-600">{state.errors.year[0]}</p>
-        )}
       </div>
 
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-        >
-          {pending ? "กำลังบันทึก..." : "บันทึก"}
-        </button>
-
-        <a
-          href="/students"
-          className="rounded-md border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50"
+      <div className="mt-8 flex items-center justify-end gap-5 border-t border-slate-200 pt-6">
+        <Link
+          href={cancelUrl}
+          className="text-sm font-semibold text-slate-600 hover:text-slate-900"
         >
           ยกเลิก
-        </a>
+        </Link>
+        <div className="w-36">
+          <Button type="submit" isLoading={isPending} variant="primary">
+            บันทึกข้อมูล
+          </Button>
+        </div>
       </div>
     </form>
   );

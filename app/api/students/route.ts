@@ -176,7 +176,7 @@ export async function PUT(request: Request) {
 
     // เช็กสิทธิ์ (Ownership or Admin)
     const isOwner = targetStudent.userId === session.user.id;
-    const isPrivileged = ["ADMIN", "STAFF"].includes(session.user.role);
+    const isPrivileged = ["ADMIN"].includes(session.user.role);
     if (!isOwner && !isPrivileged) {
       return NextResponse.json(
         { error: "Forbidden: ไม่มีสิทธิ์แก้ไขข้อมูลผู้อื่น" },

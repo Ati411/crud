@@ -12,15 +12,15 @@ datasource db {
 // USER & AUTHENTICATION
 // -------------------------------------------------------------
 model User {
-  id           String   @id @default(cuid())
-  name         String?
-  email        String?  @unique
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
   emailVerified DateTime? 
   image         String?   
-  passwordHash String?
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  passwordHash  String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   studentProfile Student?
   accounts       Account[] 
@@ -46,12 +46,11 @@ model Account {
 
 enum Role {
   ADMIN
-  STAFF
   USER
 }
 
 // -------------------------------------------------------------
-// BUSINESS LOGIC: STUDENT, COURSE, ENROLLMENT
+// BUSINESS LOGIC: STUDENT
 // -------------------------------------------------------------
 model Student {
   id          Int      @id @default(autoincrement())
@@ -60,46 +59,20 @@ model Student {
   email       String?
   major       String
   year        Int
-  status      Boolean  @default(true)
+  
+  // เปลี่ยน status เป็น Enum
+  status      StudentStatus @default(ACTIVE) 
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // เชื่อมกับบัญชีผู้ใช้ต้องไม่มี ? (1 User = 1 Student)
   userId      String?   @unique
   user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  enrollments Enrollment[]
 }
 
-model Course {
-  id          String   @id @default(uuid())
-  courseCode  String   @unique // เช่น "CS101"
-  title       String
-  credits     Int
-  capacity    Int      // โควต้าที่นั่ง
-  isActive    Boolean  @default(true)
-
-  enrollments Enrollment[]
-}
-
-model Enrollment {
-  id         String           @id @default(uuid())
-  studentId  Int
-  courseId   String
-  status     EnrollmentStatus @default(ENROLLED)
-  enrolledAt DateTime         @default(now())
-
-  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course     Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  // ป้องกันการลงวิชาเดิมซ้ำ
-  @@unique([studentId, courseId])
-  @@index([studentId])
-  @@index([courseId])
-}
-
-enum EnrollmentStatus {
-  PENDING
-  ENROLLED
-  DROPPED
+enum StudentStatus {
+  ACTIVE      // กำลังศึกษา
+  GRADUATED   // จบการศึกษา
+  DROPPED     // ดรอปเรียน / ลาพัก
+  SUSPENDED   // โดนรีไทร์ / พ้นสภาพ
 }

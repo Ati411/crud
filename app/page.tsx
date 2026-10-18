@@ -1,14 +1,19 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/app/auth"; // เช็ก path ของ auth.ts ให้ตรงกับโปรเจกต์คุณ
+import { auth } from "@/app/auth";
 
 export default async function HomePage() {
   const session = await auth();
 
-  // ถ้ายังไม่ล็อกอิน ให้เด้งไปหน้าเข้าสู่ระบบ
+  // 1. ถ้ายังไม่ล็อกอิน ให้เด้งไปหน้าเข้าสู่ระบบ
   if (!session?.user) {
     redirect("/login");
   }
 
-  // ถ้าล็อกอินแล้ว ให้เด้งไปหน้าระบบจัดการนักศึกษาเลย
+  // 2. ถ้าล็อกอินแล้วและเป็น ADMIN ให้เด้งไปหน้า Admin Dashboard
+  if (session.user.role === "ADMIN") {
+    redirect("/admin");
+  }
+
+  // 3. ถ้าเป็น USER ธรรมดา ให้เด้งไปหน้าจัดการนักศึกษา
   redirect("/students");
 }

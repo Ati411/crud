@@ -1,15 +1,14 @@
-// ไฟล์: app/students/actions.ts
 "use server";
 
 import prisma from "@/app/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { studentSchema } from "./validation";
-import { auth } from "@/app/auth"; // เช็กให้ชัวร์ว่าไฟล์ auth.ts ของคุณอยู่ที่ app/auth.ts
+import { auth } from "@/app/auth";
 
 export type FormState = {
   success: boolean;
-  message?: string; // เพิ่ม message สำหรับแจ้งเตือนระดับ Global (เช่น ไม่มีสิทธิ์)
+  message?: string;
   errors?: {
     studentCode?: string[];
     name?: string[];
@@ -36,7 +35,7 @@ export async function createStudent(
   }
 
   // ด่านที่ 2: ตรวจสอบสิทธิ์และการผูก ID (Authorization)
-  let assignedUserId = null;
+  let assignedUserId: string | null = null;
 
   if (session.user.role === "USER") {
     const existingProfile = await prisma.student.findUnique({
@@ -103,10 +102,13 @@ export async function createStudent(
       message: "เกิดข้อผิดพลาดจากระบบฐานข้อมูล ไม่สามารถบันทึกได้",
     };
   }
-
+  // สำเร็จ: กำหนด URL ปลายทางตาม Role
+  const redirectUrl = session.user.role === "ADMIN" ? "/admin" : "/students";
   // สำเร็จ: ล้างแคชหน้าแสดงผลและพาไปหน้ารวม
   revalidatePath("/students");
-  redirect("/students");
+  revalidatePath("/admin"); // ล้างแคชหน้าแอดมินให้ข้อมูลอัปเดตทันที
+
+  redirect(redirectUrl);
 }
 
 // ============================================================================
@@ -132,9 +134,9 @@ export async function updateStudent(
   }
 
   // Logic ตรวจสอบสิทธิ์ระดับลึก:
-  // ยอมให้แก้ได้เฉพาะ ADMIN, STAFF หรือ "เจ้าของข้อมูลตัวเองเท่านั้น"
+  // ยอมให้แก้ได้เฉพาะ ADMINหรือ "เจ้าของข้อมูลตัวเองเท่านั้น"
   const isOwner = targetStudent.userId === session.user.id;
-  const isPrivileged = ["ADMIN", "STAFF"].includes(session.user.role);
+  const isPrivileged = session.user.role === "ADMIN";
 
   if (!isOwner && !isPrivileged) {
     return {
@@ -175,10 +177,14 @@ export async function updateStudent(
     }
     return { success: false, message: "ไม่สามารถอัปเดตข้อมูลได้" };
   }
+  // สำเร็จ: กำหนด URL ปลายทางตาม Role
+  const redirectUrl = session.user.role === "ADMIN" ? "/admin" : "/students";
 
   revalidatePath("/students");
   revalidatePath(`/students/edit/${studentId}`);
-  redirect("/students");
+  revalidatePath("/admin"); // ล้างแคชหน้าแอดมิน
+
+  redirect(redirectUrl);
 }
 
 // ============================================================================
@@ -192,7 +198,7 @@ export async function deleteStudent(id: number) {
     throw new Error("Unauthorized: กรุณาเข้าสู่ระบบ");
   }
 
-  // 2. เช็ก Role แบบเข้มงวด (STAFF หรือ USER ลบไม่ได้เด็ดขาด)
+  // 2. เช็ก Role แบบเข้มงวด (USER ลบไม่ได้เด็ดขาด)
   if (session.user.role !== "ADMIN") {
     throw new Error(
       "Forbidden: เฉพาะผู้ดูแลระบบ (ADMIN) เท่านั้นที่มีสิทธิ์ลบข้อมูล",
@@ -206,5 +212,34 @@ export async function deleteStudent(id: number) {
     revalidatePath("/students");
   } catch (error) {
     throw new Error("ไม่สามารถลบข้อมูลได้ อาจไม่มีข้อมูลนี้อยู่ในระบบแล้ว");
+  }
+}
+
+// ============================================================================
+// 4. UPDATE STUDENT STATUS (เปลี่ยนสถานะจาก Dropdown - เฉพาะ Admin)
+// ============================================================================
+export async function updateStudentStatus(id: number, newStatus: string) {
+  const session = await auth();
+
+  if (session?.user?.role !== "ADMIN") {
+    throw new Error("Forbidden: เฉพาะ Admin เท่านั้นที่เปลี่ยนสถานะได้");
+  }
+
+  // ป้องกันการยัดค่าแปลกๆ ที่ไม่มีใน Enum
+  const validStatuses = ["ACTIVE", "GRADUATED", "DROPPED", "SUSPENDED"];
+  if (!validStatuses.includes(newStatus)) {
+    throw new Error("Invalid Status");
+  }
+
+  try {
+    await prisma.student.update({
+      where: { id },
+      data: { status: newStatus as any },
+    });
+
+    revalidatePath("/students");
+    revalidatePath("/admin");
+  } catch (error) {
+    throw new Error("ไม่สามารถอัปเดตสถานะได้");
   }
 }

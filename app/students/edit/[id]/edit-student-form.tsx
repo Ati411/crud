@@ -1,0 +1,100 @@
+"use client";
+
+import { useActionState } from "react";
+import Link from "next/link";
+import Button from "@/app/components/ui/Button";
+import Input from "@/app/components/ui/Input";
+import { FormState } from "../../actions";
+
+const initialState: FormState = { success: false };
+
+export default function EditStudentForm({
+  action,
+  student,
+  cancelUrl = "/students",
+}: {
+  action: any;
+  student: any;
+  cancelUrl?: string;
+}) {
+  const [state, formAction, isPending] = useActionState(action, initialState);
+
+  return (
+    <form action={formAction} className="space-y-6">
+      {state.message && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
+          {state.message}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <Input
+          label="รหัสนักศึกษา"
+          name="studentCode"
+          defaultValue={student.studentCode}
+          placeholder="เช่น 673450000-0"
+          error={state.errors?.studentCode?.[0]}
+          disabled={isPending}
+          required
+        />
+        <Input
+          label="ชื่อ-นามสกุล"
+          name="name"
+          defaultValue={student.name}
+          placeholder="สมชาย เรียนดี"
+          error={state.errors?.name?.[0]}
+          disabled={isPending}
+          required
+        />
+      </div>
+
+      <Input
+        label="Email (อีเมล)"
+        name="email"
+        type="email"
+        defaultValue={student.email || ""}
+        placeholder="student@example.com"
+        error={state.errors?.email?.[0]}
+        disabled={isPending}
+      />
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <Input
+          label="สาขาวิชา"
+          name="major"
+          defaultValue={student.major}
+          placeholder="เช่น Computer Science"
+          error={state.errors?.major?.[0]}
+          disabled={isPending}
+          required
+        />
+        <Input
+          label="ชั้นปี"
+          name="year"
+          type="number"
+          min={1}
+          max={8}
+          defaultValue={student.year}
+          placeholder="1-8"
+          error={state.errors?.year?.[0]}
+          disabled={isPending}
+          required
+        />
+      </div>
+
+      <div className="mt-8 flex items-center justify-end gap-5 border-t border-slate-200 pt-6">
+        <Link
+          href={cancelUrl}
+          className="text-sm font-semibold text-slate-600 hover:text-slate-900"
+        >
+          ยกเลิก
+        </Link>
+        <div className="w-40">
+          <Button type="submit" isLoading={isPending} variant="primary">
+            บันทึกการแก้ไข
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+}

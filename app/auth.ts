@@ -87,9 +87,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           case "ADMIN":
             token.role = "ADMIN";
             break;
-          case "STAFF":
-            token.role = "STAFF";
-            break;
           default:
             token.role = "USER";
         }
@@ -104,13 +101,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-
-        session.user.role =
-          token.role === "ADMIN" ||
-          token.role === "STAFF" ||
-          token.role === "USER"
-            ? token.role
-            : "USER";
+        // เช็กแค่ ADMIN หรือ USER
+        session.user.role = token.role === "ADMIN" ? "ADMIN" : "USER";
       }
 
       return session;
