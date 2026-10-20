@@ -73,6 +73,6 @@ model Student {
 enum StudentStatus {
   ACTIVE      // กำลังศึกษา
   GRADUATED   // จบการศึกษา
-  DROPPED     // ดรอปเรียน / ลาพัก
-  SUSPENDED   // โดนรีไทร์ / พ้นสภาพ
+  DROPPED     // ดรอปเรียน
+  SUSPENDED   // พ้นสภาพ
 }

@@ -34,6 +34,9 @@ export default function CreateStudentForm({
           error={state.errors?.studentCode?.[0]}
           disabled={isPending}
           required
+          maxLength={11}
+          pattern="\d{9}-\d{1}"
+          title="กรุณากรอกตัวเลข 9 ตัว ตามด้วยเครื่องหมาย - และตัวเลข 1 ตัว (เช่น 673450000-0)"
         />
         <Input
           label="ชื่อ-นามสกุล"
@@ -68,8 +71,8 @@ export default function CreateStudentForm({
           name="year"
           type="number"
           min={1}
-          max={8}
-          placeholder="1-8"
+          max={4}
+          placeholder="1-4"
           error={state.errors?.year?.[0]}
           disabled={isPending}
           required

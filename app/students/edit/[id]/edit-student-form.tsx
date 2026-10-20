@@ -31,11 +31,13 @@ export default function EditStudentForm({
         <Input
           label="รหัสนักศึกษา"
           name="studentCode"
-          defaultValue={student.studentCode}
           placeholder="เช่น 673450000-0"
           error={state.errors?.studentCode?.[0]}
           disabled={isPending}
           required
+          maxLength={11}
+          pattern="\d{9}-\d{1}"
+          title="กรุณากรอกตัวเลข 9 ตัว ตามด้วยเครื่องหมาย - และตัวเลข 1 ตัว (เช่น 673450000-0)"
         />
         <Input
           label="ชื่อ-นามสกุล"

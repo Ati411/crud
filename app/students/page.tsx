@@ -12,6 +12,7 @@ export default async function StudentsPage({
   searchParams: Promise<{ query?: string; major?: string }>;
 }) {
   const session = await auth();
+  await new Promise((resolve) => setTimeout(resolve, 1500));
 
   const params = await searchParams;
   const query = params?.query || "";
@@ -46,7 +47,7 @@ export default async function StudentsPage({
 
   return (
     <div className="min-h-screen bg-slate-50 py-8">
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="mx-auto w-[95%] max-w-[1600px] px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
@@ -162,7 +163,7 @@ export default async function StudentsPage({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full whitespace-nowrap text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-500">
                 <tr>
                   <th className="border-b border-slate-200 px-6 py-4 text-xs font-semibold uppercase tracking-wider">

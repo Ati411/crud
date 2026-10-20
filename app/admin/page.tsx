@@ -8,6 +8,7 @@ import RecentStudentsTable from "./recent-students-table";
 
 export default async function AdminDashboardPage() {
   const session = await auth();
+  await new Promise((resolve) => setTimeout(resolve, 1500)); // เพิ่มดีเลย์ 1.5 วินาทีเพื่อให้เห็น Skeleton Loading
 
   if (!session?.user) redirect("/login");
   if (session.user.role !== "ADMIN") redirect("/unauthorized");
